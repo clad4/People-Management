@@ -1,0 +1,7 @@
+.vs
+PeopleManagement/.vs
+PeopleManagement/bin
+PeopleManagement/obj
+/packages
+*.user
+*.suo
