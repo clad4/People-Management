@@ -34,6 +34,7 @@ public partial class MainForm : Form
    
     public void Loading()
     {
+        dgvPers.AutoGenerateColumns = false;
         dgvPers.RowHeadersVisible = false;
         dgvPers.AllowUserToResizeColumns = false;
         dgvPers.AllowUserToResizeRows = false;
@@ -61,11 +62,11 @@ public partial class MainForm : Form
     private void OnClickNew(object? sender, EventArgs e)
     {
         var newPerson = new AddForm(_bindingSource);
-        newPerson.ShowDialog();
         newPerson.FormClosed += (sender, e) => 
         {
             Sorted();
         };
+        newPerson.ShowDialog();
     }
     private void OnClickDelete(object? sender, EventArgs e)
     {
@@ -81,11 +82,11 @@ public partial class MainForm : Form
         if (_bindingSource.Current is Person person)
         {
             var editForm = new EditForm(person);
-            editForm.ShowDialog();
             editForm.FormClosed += (sender, e) =>
             {
                 Sorted();
             };
+            editForm.ShowDialog();
         }
     }
 }
