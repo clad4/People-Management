@@ -17,7 +17,7 @@ public partial class MainForm : Form
     private BindingSource _bs = new();
 
     private PeopleServices _pps;
-    private readonly string _connection = "Data source=Data/app.db";
+    private readonly string _connection = "Data source=app.db";
     private readonly string _table = "People"; 
 
     public MainForm()
@@ -123,7 +123,7 @@ public partial class MainForm : Form
         {
             await _pps.DeletePersonAsync(_table, person.PersonId);
         }
-        //LoadDataAsync().Wait();
+        LoadDataAsync().Wait();
         _bs.ResetBindings(false);
 
         //delete table

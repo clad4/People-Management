@@ -47,12 +47,7 @@ public class PeopleServices
                 Age INTEGER NOT NULL,
                 Other TEXT
             );";
-            await using var conn = new SqliteConnection(_connection);
-            await conn.OpenAsync();
-            await using (var cmdCreateTable = new SqliteCommand(query, conn))
-            {
-                await cmdCreateTable.ExecuteNonQueryAsync();
-            }
+            await DatabaseHelper.CreateTableAsync(_connection, query);
         }
         catch (SqliteException ex)
         {
@@ -65,21 +60,14 @@ public class PeopleServices
                         "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
-    public async Task InsertValueAsync(string tbName, string name, int age)
+    public async Task InsertValueAsync(string tbName, string name, int age, string? other)
     {
         try
         {
             string query =
-                $@"INSERT INTO {tbName} (Name, Age)
-                    VALUES (@Name, @Age);";
-            await using var conn = new SqliteConnection(_connection);
-            await conn.OpenAsync();
-            await using (var insertSample = new SqliteCommand(query, conn))
-            {
-                insertSample.Parameters.AddWithValue("@Name", name);
-                insertSample.Parameters.AddWithValue("@Age", age);
-                await insertSample.ExecuteNonQueryAsync();
-            };
+                $@"INSERT INTO {tbName} (Name, Age, Other)
+                    VALUES (@Name, @Age, @Other);";
+            await DatabaseHelper.InsertPersonAsync(_connection,query,name,age,other);
         }
         catch (SqliteException ex)
         {

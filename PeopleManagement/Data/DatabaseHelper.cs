@@ -5,25 +5,15 @@ using PeopleManagement.Models;
 
 public static class DatabaseHelper
 {
-    public static async Task CreateTableHelper(string db, string tbName, string query)
+    public static async Task CreateTableAsync(string connection, string query)
     {
         try
         {
-            await using var conn = new SqliteConnection($"Data source={db}");
+            await using var conn = new SqliteConnection(connection);
             await conn.OpenAsync();
-
-            string checkQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name=@tableName;";
-
-            await using (var cmd = new SqliteCommand(checkQuery, conn))
+            await using (var cmdCreateTable = new SqliteCommand(query, conn))
             {
-                cmd.Parameters.AddWithValue("@tableName", tbName);
-                var result = await cmd.ExecuteScalarAsync();
-
-                if (result == null)
-                {
-                    await using var createTable = new SqliteCommand(query, conn);
-                    await createTable.ExecuteNonQueryAsync();
-                }
+                await cmdCreateTable.ExecuteNonQueryAsync();
             }
         }
         catch (SqliteException ex)
@@ -64,6 +54,33 @@ public static class DatabaseHelper
                     }
                 }
             }
+        }
+        catch (SqliteException ex)
+        {
+            MessageBox.Show($"SQLite Error: {ex.Message}",
+                        "Input Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+    public static async Task InsertPersonAsync(string connection, string query, string name, int age, string? other)
+    {
+        try
+        {
+            await using var conn = new SqliteConnection(connection);
+            await conn.OpenAsync();
+            await using (var cmd = new SqliteCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@Name", name);
+                cmd.Parameters.AddWithValue("@Age", age);
+                if (other ==null) cmd.Parameters.AddWithValue("@Other", DBNull.Value);
+                else cmd.Parameters.AddWithValue("@Other", other);
+
+                await cmd.ExecuteNonQueryAsync();
+            };
         }
         catch (SqliteException ex)
         {

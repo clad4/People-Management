@@ -15,6 +15,7 @@ public partial class AddForm : Form
         _table = table;
         _peopleServices = new PeopleServices(_connection);
         InitializeComponent();
+
         tbNo.ReadOnly = true;
         tbNo.Text = (_no + 1).ToString();
 
@@ -27,8 +28,9 @@ public partial class AddForm : Form
         {
             _person.Name = tbName.Text.Trim();
             _person.Age = int.Parse(tbAge.Text);
+            _person.Other = tbOther.Text.Trim();
 
-            _peopleServices.InsertValueAsync(_table, _person.Name, _person.Age).Wait();
+            _peopleServices.InsertValueAsync(_table, _person.Name, _person.Age, _person.Other).Wait();
             this.Close();
         }
         catch (FormatException)
