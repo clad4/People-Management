@@ -46,13 +46,23 @@ public partial class MainForm : Form
 
             await _pps.GetPeopleAsync(_table);
 
-            //await Task.Run(() =>
-            //{
-            //    Program.No = Program.People.Count() + 1;
-            //});
-
             _bs.DataSource = Program.People;
             dgvPers.DataSource = _bs;
+        }
+        catch (SqliteException ex)
+        {
+            MessageBox.Show($"SQLite Error: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show($"Invalid Operation Error: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch (OverflowException ex)
+        {
+            MessageBox.Show($"Overflow Error: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception e)
         {
