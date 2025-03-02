@@ -1,113 +1,81 @@
 using Microsoft.Data.Sqlite;
 using PeopleManagement.Models;
+using PeopleManagement.Services;
 using PeopleManagement.SortingControls;
+using System.Data;
+using System.Net.Mail;
 
 namespace PeopleManagement.Pages;
 public partial class MainForm : Form
 {
-    private BindingSource _bindingSource = new();
     private List<SortingControl> SortingControls = new List<SortingControl>
     {
         new NoSorter(),
         new NameSorter(),
         new AgeSorter(),
     };
-    private string _connection = "Data source=app.db";
+    private BindingSource _bs = new();
 
+    private PeopleServices _pps;
+    private readonly string _connection = "Data source=Data/app.db";
+    private readonly string _table = "People"; 
 
     public MainForm()
     {
         InitializeComponent();
-        InitializeDatabase().Wait();
+        _pps = new PeopleServices(_connection);
 
-        _bindingSource.DataSource = Program.People;
-        dgvPers.DataSource = _bindingSource;
-        cbSort.DataSource = SortingControls;
-        cbSort.DisplayMember = "Name";
-
-        Loading();
+        LoadDataAsync().Wait();
+        LoadingStates();
 
         cbSort.SelectedIndexChanged += (sender, e) => Sorted();
-        btnNew.Click += OnClickNew;
+        btnNew.Click += OnClickNewAsync;
         btnEdit.Click += OnClickEdit;
         btnDelete.Click += OnClickDelete;
     }
 
     #region Start-up
-    private async Task InitializeDatabase()
+    private async Task LoadDataAsync()
     {
         try
         {
-            await using (var conn = new SqliteConnection(_connection))
-        {
-            await conn.OpenAsync();
-
-            //First check if the table exists
-            await using (var cmdCheckTable = new SqliteCommand(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='People';", conn))
+            if(!await _pps.IsTableExistAsync(_table))
             {
-                var result = await cmdCheckTable.ExecuteScalarAsync();
-
-                // If table doesn't exist, create it
-                if (result == null)
-                {
-                    await using (var cmdCreateTable = new SqliteCommand(
-                        @"CREATE TABLE People (
-                        No INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Name TEXT NOT NULL,
-                        Age INTEGER NOT NULL
-                    );", conn))
-                    {
-                        await cmdCreateTable.ExecuteNonQueryAsync();
-                    }
-
-                    await using (var insertSample = new SqliteCommand(
-                        @"INSERT INTO People (Name, Age) VALUES
-                            ('First', 1),
-                            ('Second', 2);", conn))
-                    {
-                        await insertSample.ExecuteNonQueryAsync();
-                    };
-                }
+                await _pps.CreateTableAsync(_table);
             }
 
-            //Get people from the table if it exists
-            await using (var cmd = new SqliteCommand(
-                "SELECT No, Name, Age FROM People;", conn))
-            {
+            await _pps.GetPeopleAsync(_table);
 
-                await using (var reader = await cmd.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        Program.People.Add(new Person
-                        {
-                            No = reader.GetInt32(0),
-                            Name = reader.GetString(1),
-                            Age = reader.GetInt32(2)
-                        });
-                    }
-                }
-            };
-            
-        }
+            //await Task.Run(() =>
+            //{
+            //    Program.No = Program.People.Count() + 1;
+            //});
+
+            _bs.DataSource = Program.People;
+            dgvPers.DataSource = _bs;
         }
         catch (Exception e)
         {
-            MessageBox.Show($"Error: {e.Message}", "Error", MessageBoxButtons.OK);
+            MessageBox.Show($"Failed to load data: {e.Message}", "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
-    private void Loading()
+    private void LoadingStates()
     {
+        cbSort.DataSource = SortingControls;
+        cbSort.DisplayMember = "Name";
+        cbSort.DropDownStyle = ComboBoxStyle.DropDownList;
+
         dgvPers.RowHeadersVisible = false;
         dgvPers.AllowUserToResizeColumns = false;
         dgvPers.AllowUserToResizeRows = false;
         dgvPers.AllowUserToAddRows = false;
         dgvPers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
+        dgvPers.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+        dgvPers.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
         dgvPers.AutoResizeColumns();
         dgvPers.ColumnHeadersHeight = 23;
-        dgvPers.DefaultCellStyle.Padding = new Padding(3,0,3,0);
+        dgvPers.DefaultCellStyle.Padding = new Padding(1,0,0,0);
         dgvPers.ColumnHeadersDefaultCellStyle.Font = new Font("Arial", 14, FontStyle.Bold);
         dgvPers.DefaultCellStyle.Font = new Font("Arial", 12, FontStyle.Regular);
 
@@ -119,40 +87,52 @@ public partial class MainForm : Form
     {
         if (cbSort.SelectedItem is SortingControl selectedSorter)
         {
-            List<Person> peopleList = (List<Person>)_bindingSource.DataSource;
+            List<Person> peopleList = (List<Person>)_bs.DataSource;
             selectedSorter.Sort(peopleList);
         }
-        _bindingSource.ResetBindings(false);
+        _bs.ResetBindings(false);
     }
     #endregion
 
     #region Events
-    private void OnClickNew(object? sender, EventArgs e)
+    private void OnClickNewAsync(object? sender, EventArgs e)
     {
-        var newPerson = new AddForm(_bindingSource);
-        newPerson.FormClosed += (sender, e) => 
+        var newPerson = new AddForm(_connection, _table);
+        newPerson.FormClosed += (sender, e) =>
         {
             Sorted();
+            LoadDataAsync().Wait();
+            _bs.ResetBindings(false);
         };
         newPerson.ShowDialog();
     }
-    private void OnClickDelete(object? sender, EventArgs e)
+    private async void OnClickDelete(object? sender, EventArgs e)
     {
-        if (_bindingSource.Current == null) return;
-        if (_bindingSource.Current is Person delPer)
+        if (_bs.Current == null) return;
+        if (_bs.Current is Person person)
         {
-            var result = Program.People.Remove(delPer);
-            if (result == true) _bindingSource.ResetBindings(false);
+            await _pps.DeletePersonAsync(_table, person.PersonId);
         }
+        //LoadDataAsync().Wait();
+        _bs.ResetBindings(false);
+
+        //delete table
+        //await using var conn = new SqliteConnection(_connection);
+        //await conn.OpenAsync();
+        //await using var cmd = new SqliteCommand($"DROP TABLE {_table}", conn);
+        //await cmd.ExecuteNonQueryAsync();
     }
     private void OnClickEdit(object? sender, EventArgs e)
     {
-        if (_bindingSource.Current is Person person)
+        if (_bs.Current == null) return;
+        if (_bs.Current is Person person)
         {
-            var editForm = new EditForm(person);
+            var editForm = new EditForm(_connection, _table, person);
             editForm.FormClosed += (sender, e) =>
             {
                 Sorted();
+                LoadDataAsync().Wait();
+                _bs.ResetBindings(false);
             };
             editForm.ShowDialog();
         }

@@ -53,7 +53,7 @@ partial class MainForm
         panel1.Dock = DockStyle.Fill;
         panel1.Location = new Point(0, 0);
         panel1.Name = "panel1";
-        panel1.Size = new Size(598, 389);
+        panel1.Size = new Size(644, 389);
         panel1.TabIndex = 0;
         // 
         // label2
@@ -72,7 +72,7 @@ partial class MainForm
         cbSort.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
         cbSort.Font = new Font("Segoe UI", 11F);
         cbSort.FormattingEnabled = true;
-        cbSort.Location = new Point(350, 12);
+        cbSort.Location = new Point(396, 12);
         cbSort.Name = "cbSort";
         cbSort.Size = new Size(121, 28);
         cbSort.TabIndex = 8;
@@ -84,7 +84,7 @@ partial class MainForm
         panel2.Controls.Add(btnEdit);
         panel2.Controls.Add(btnNew);
         panel2.Dock = DockStyle.Right;
-        panel2.Location = new Point(477, 0);
+        panel2.Location = new Point(523, 0);
         panel2.Name = "panel2";
         panel2.Size = new Size(121, 389);
         panel2.TabIndex = 7;
@@ -135,7 +135,7 @@ partial class MainForm
         dgvPers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         dgvPers.Location = new Point(12, 50);
         dgvPers.Name = "dgvPers";
-        dgvPers.Size = new Size(459, 327);
+        dgvPers.Size = new Size(505, 327);
         dgvPers.TabIndex = 6;
         // 
         // label1
@@ -153,10 +153,10 @@ partial class MainForm
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         BackColor = Color.LightGray;
-        ClientSize = new Size(598, 389);
+        ClientSize = new Size(644, 389);
         Controls.Add(panel1);
-        MaximumSize = new Size(614, 428);
-        MinimumSize = new Size(614, 428);
+        MaximumSize = new Size(660, 428);
+        MinimumSize = new Size(660, 428);
         Name = "MainForm";
         Text = "People Management";
         panel1.ResumeLayout(false);

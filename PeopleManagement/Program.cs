@@ -1,24 +1,13 @@
 using PeopleManagement.Models;
 using PeopleManagement.SortingControls;
+using System.Data;
 
 namespace PeopleManagement;
 
 internal static class Program
 {
     public static List<Person> People { get; set; } = new();
-    //private static void Initailize()
-    //{
-    //    for (int k = 1; k <= 10; k++)
-    //    {
-    //        People.Add(new Person
-    //        {
-    //            No = k,
-    //            Name = $"Name {k}",
-    //            Age = (k * 22) % 7,
-    //        });
-    //    }
-    //}
-
+    public static int No { get; set; }
     [STAThread]
     static void Main()
     {
@@ -27,5 +16,5 @@ internal static class Program
         ApplicationConfiguration.Initialize();
         Application.Run(new Pages.MainForm());
     }
-    
+
 }

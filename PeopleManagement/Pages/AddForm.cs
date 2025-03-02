@@ -1,25 +1,34 @@
 ﻿namespace PeopleManagement.Pages;
 using PeopleManagement.Models;
+using PeopleManagement.Services;
 
 public partial class AddForm : Form
 {
     private Person _person = new();
-    private BindingSource _bindingSource;
-    public AddForm(BindingSource source)
+    private readonly string _connection;
+    private readonly string _table;
+    private PeopleServices _peopleServices;
+    private int _no = Program.People.Count();
+    public AddForm(string connection, string table)
     {
+        _connection = connection;
+        _table = table;
+        _peopleServices = new PeopleServices(_connection);
         InitializeComponent();
-        _bindingSource = source;
+        tbNo.ReadOnly = true;
+        tbNo.Text = (_no + 1).ToString();
+
         btnCancel.Click += (sender, e) => this.Close();
         btnAdd.Click += BtnAddClicked;
     }
-    public void BtnAddClicked (object? sender, EventArgs e)
+    public void BtnAddClicked(object? sender, EventArgs e)
     {
-        try{
-            _person.No = int.Parse(tbNo.Text);
+        try
+        {
             _person.Name = tbName.Text.Trim();
             _person.Age = int.Parse(tbAge.Text);
 
-            _bindingSource.Add(_person);
+            _peopleServices.InsertValueAsync(_table, _person.Name, _person.Age).Wait();
             this.Close();
         }
         catch (FormatException)
@@ -31,4 +40,5 @@ public partial class AddForm : Form
             MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
+
 }
